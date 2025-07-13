@@ -1,0 +1,32 @@
+@host =https://localhost:8443/cadastroapi/actrl/admin
+@token= JWT-TOKEN
+
+###SEARCH-ALL-USERS
+GET {{host}}/search/?page=0&size=10
+Authorization: Bearer {{token}}
+
+###SEARCH-BY-ID
+GET {{host}}/search?value=201&page=0&size=10
+Authorization: Bearer {{token}}
+
+###SEARCH-BY-USERNAME
+GET {{host}}/search?value=maik&page=0&size=10
+Authorization: Bearer {{token}}
+
+###SEARCH-FOR-EXACT-EMAIL
+GET {{host}}/search?value=anasilva@example.com&page=0&size=10
+Authorization: Bearer {{token}}
+
+###PARTIAL-EMAIL-SEARCH
+GET {{host}}/search?value=example&page=0&size=10
+Authorization: Bearer {{token}}
+
+
+### PROMOTE USER TO ADMIN
+PUT {{host}}/promote
+Content-Type: application/json
+Authorization: Bearer {{token}}
+
+{
+  "userId":
+}

@@ -1,0 +1,613 @@
+openapi: 3.0.1
+info:
+  title: Register API
+  description: API for user management
+  contact:
+    name: Maik
+    email: maikgafurtado@gmail.com
+  version: 1.0.0
+servers:
+- url: https://localhost:8443/cadastroapi/actrl/api
+  description: Local HTTPS server
+tags:
+- name: Admin
+  description: Operations available to system administrators
+- name: Authentication
+  description: Endpoints for user authentication (login and logout)
+- name: Password
+  description: Endpoint to update user password using recovery code
+- name: User Resource
+  description: Endpoints for user registration, update, and validation
+paths:
+  /actrl/api/admin/promote:
+    put:
+      tags:
+      - Admin
+      summary: Promote user to admin
+      description: Promotes a regular user to administrator role by their ID.
+      operationId: promoteUser
+      requestBody:
+        description: DTO with user ID to promote
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/PromoteUserDto'
+        required: true
+      responses:
+        '204':
+          description: User successfully promoted to admin
+        '400':
+          description: User not found
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '409':
+          description: User is already an admin
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+  /actrl/api/admin/search:
+    get:
+      tags:
+      - Admin
+      summary: Search users
+      description: Allows admin to search users by ID, email, or username. Supports
+        pagination and partial matching.
+      operationId: searchUsers
+      parameters:
+      - name: value
+        in: query
+        description: ID, username or partial email to filter
+        schema:
+          type: string
+          default: ''
+      - name: page
+        in: query
+        description: Page number (zero-based)
+        schema:
+          type: integer
+          format: int32
+          default: 0
+      - name: size
+        in: query
+        description: Number of results per page
+        schema:
+          type: integer
+          format: int32
+          default: 10
+      responses:
+        '200':
+          description: Search results
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/PageResponseDto'
+        '400':
+          description: Invalid search parameters
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+  /actrl/api/auth/login:
+    post:
+      tags:
+      - Authentication
+      summary: Login
+      description: Authenticates the user and returns a JWT token
+      operationId: login
+      requestBody:
+        description: Login credentials (username/email and password)
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/LoginDto'
+        required: true
+      responses:
+        '200':
+          description: Login successful
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/AuthResponseDto'
+        '401':
+          description: Unauthorized - Invalid credentials
+          content:
+            application/json:
+              schema:
+                type: string
+  /actrl/api/auth/logout:
+    post:
+      tags:
+      - Authentication
+      summary: Logout
+      description: Logs out the user by invalidating the current token
+      operationId: logout
+      parameters:
+      - name: Authorization
+        in: header
+        description: Bearer token (e.g., 'Bearer eyJhbGciOi...')
+        required: true
+        schema:
+          type: string
+      responses:
+        '200':
+          description: Logout successful
+          content:
+            application/json:
+              schema:
+                type: string
+                example: Logout successful.
+        '400':
+          description: Invalid or missing token
+          content:
+            application/json:
+              schema:
+                type: string
+                example: Missing or invalid authorization header.
+  /actrl/api/update/password/start:
+    post:
+      tags:
+      - Password
+      summary: Start password update
+      description: Initiates the password recovery process by sending a code to the
+        user's email.
+      operationId: startPasswordUpdate
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/StartUpdatePasswordDto'
+      responses:
+        '200':
+          description: Recovery initiated, token returned
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/PasswordUpdateResponseDto'
+        '404':
+          description: User not found
+          content:
+            application/json:
+              schema:
+                type: string
+                example: User not found
+        '500':
+          description: Internal server error
+          content:
+            application/json:
+              schema:
+                type: string
+                example: Error processing request
+  /actrl/api/update/password/new/password:
+    put:
+      tags:
+      - Password
+      summary: Update password
+      description: Updates the user's password after validating the recovery code.
+      operationId: updatePassword
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/NewPasswordDto'
+      responses:
+        '204':
+          description: Operation successful
+        '400':
+          description: Invalid data
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '404':
+          description: User not found
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '500':
+          description: Internal server error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+  /actrl/api/update/password/validate/code:
+    post:
+      tags:
+      - Password
+      summary: Validate recovery code
+      description: Validates the recovery code provided by the user before allowing
+        password update.
+      operationId: validateCode
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/ValidatePasswordUpdateCodeDto'
+      responses:
+        '204':
+          description: Code validated successfully
+        '400':
+          description: Invalid or expired recovery code
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '404':
+          description: User not found
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '500':
+          description: Internal server error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+  /actrl/api/users/delete:
+    delete:
+      tags:
+      - User Resource
+      summary: Deletes a user
+      description: Deletes a user by validating their credentials
+      operationId: delete
+      responses:
+        default:
+          description: default response
+          content:
+            application/json: {}
+  /actrl/api/users/update/email:
+    put:
+      tags:
+      - User Resource
+      summary: Updates user's email
+      description: Initiates email update process by sending a confirmation code
+      operationId: emailUpdate
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/EmailUpdateDto'
+      responses:
+        default:
+          description: default response
+          content:
+            application/json: {}
+  /actrl/api/users/register:
+    post:
+      tags:
+      - User Resource
+      summary: Register a new user
+      description: Creates a new user with provided email, username, and password.
+      operationId: registerUser
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/RegisterDto'
+      responses:
+        '201':
+          description: User registered successfully
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/UserResponseDto'
+        '400':
+          description: Invalid input
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+  /actrl/api/users/update/username:
+    put:
+      tags:
+      - User Resource
+      summary: Updates user's username
+      description: Changes the username after authentication
+      operationId: updateUsername
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/UsernameUpdateDto'
+      responses:
+        default:
+          description: default response
+          content:
+            application/json: {}
+  /actrl/api/users/validate/email:
+    post:
+      tags:
+      - User Resource
+      summary: Validates email update code
+      description: Checks if the code for confirming email update is valid
+      operationId: validateEmailUpdateCode
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/ValidateCodeDto'
+      responses:
+        default:
+          description: default response
+          content:
+            application/json: {}
+  /actrl/api/users/validate/register:
+    post:
+      tags:
+      - User Resource
+      summary: Validates registration code
+      description: Checks the user code and removes the temporary token on success
+      operationId: validateRegistrationCode
+      parameters:
+      - name: Authorization
+        in: header
+        schema:
+          type: string
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/ValidateCodeDto'
+      responses:
+        default:
+          description: default response
+          content:
+            application/json: {}
+components:
+  schemas:
+    ErrorResponse:
+      required:
+      - message
+      - timestamp
+      type: object
+      properties:
+        message:
+          type: string
+          description: Error message
+          example: Invalid credentials
+        timestamp:
+          type: string
+          description: Timestamp of the error
+          format: date-time
+      description: Error response details
+    PromoteUserDto:
+      required:
+      - userId
+      type: object
+      properties:
+        userId:
+          type: integer
+          description: User ID to promote
+          format: int64
+          example: 7
+      description: DTO for promoting a user to admin
+    PageResponseDto:
+      type: object
+      properties:
+        content:
+          type: array
+          description: List of items on the current page.
+          items:
+            type: object
+            description: List of items on the current page.
+        currentPage:
+          type: integer
+          description: Current page number (zero-based).
+          format: int32
+          example: 0
+        pageSize:
+          type: integer
+          description: Number of items per page.
+          format: int32
+          example: 10
+        totalItems:
+          type: integer
+          description: Total number of items available.
+          format: int32
+          example: 100
+      description: DTO for paginated API responses.
+    AuthResponseDto:
+      required:
+      - email
+      - id
+      - token
+      - username
+      type: object
+      properties:
+        id:
+          type: integer
+          description: User ID
+          format: int64
+          example: 1
+        token:
+          type: string
+          description: JWT token for authenticated access
+        email:
+          type: string
+          description: Email of the user
+          example: email@example.com
+        username:
+          type: string
+          description: Username of the user
+          example: maik
+      description: Authentication response returned after successful login
+    LoginDto:
+      required:
+      - password
+      - value
+      type: object
+      properties:
+        value:
+          type: string
+          description: Username or email
+          example: email@example.com
+        password:
+          type: string
+          description: User password
+          example: myPassword123
+      description: DTO for login request
+    PasswordUpdateResponseDto:
+      type: object
+      properties:
+        token:
+          type: string
+        user:
+          $ref: '#/components/schemas/User'
+      description: Response for password update requests.
+    User:
+      type: object
+      properties:
+        id:
+          type: integer
+          format: int64
+        username:
+          type: string
+        email:
+          type: string
+        passwordHash:
+          type: string
+        recoveryToken:
+          type: string
+        codeValidate:
+          type: string
+        pendingEmail:
+          type: string
+        status:
+          type: string
+          enum:
+          - VALIDATED
+          - NOT_VALIDATED
+          - AWAITING_EMAIL_VALIDATION
+        role:
+          type: string
+          enum:
+          - USER
+          - ADMIN
+    StartUpdatePasswordDto:
+      required:
+      - email
+      type: object
+      properties:
+        email:
+          type: string
+          description: Email address to receive the password reset code.
+          example: user@example.com
+      description: DTO to initiate a password reset by providing the user's email.
+    UserResponseDto:
+      required:
+      - email
+      - status
+      type: object
+      properties:
+        email:
+          type: string
+          description: Email of the user.
+          example: user@example.com
+        status:
+          type: string
+          description: User status (e.g., ACTIVE, VALIDATING, etc.)
+          example: ACTIVE
+          enum:
+          - VALIDATED
+          - NOT_VALIDATED
+          - AWAITING_EMAIL_VALIDATION
+      description: DTO representing user details.
+    NewPasswordDto:
+      required:
+      - confirmPassword
+      - newPassword
+      type: object
+      properties:
+        newPassword:
+          type: string
+          description: New password.
+          example: newPassword123
+        confirmPassword:
+          type: string
+          description: Confirm new password.
+          example: newPassword123
+      description: DTO for providing a new password after code validation.
+    ValidatePasswordUpdateCodeDto:
+      required:
+      - code
+      type: object
+      properties:
+        code:
+          type: string
+          description: Recovery code sent to the user's email
+          example: ABC123
+      description: DTO for validating a recovery code during password update
+    DeleteDto:
+      required:
+      - password
+      type: object
+      properties:
+        password:
+          type: string
+          description: User's current password
+          example: myPassword123
+      description: DTO for deleting a user
+    EmailUpdateDto:
+      required:
+      - newEmail
+      - password
+      type: object
+      properties:
+        newEmail:
+          type: string
+          description: New email address
+          example: newemail@example.com
+        password:
+          type: string
+          description: Current password
+          example: myPassword123
+      description: DTO for updating email
+    RegisterDto:
+      required:
+      - email
+      - password
+      - username
+      type: object
+      properties:
+        username:
+          type: string
+          description: Username of the new user
+          example: maik
+        email:
+          type: string
+          description: Email of the new user
+          example: email@example.com
+        password:
+          type: string
+          description: Password for the new user
+          example: '12345678'
+      description: DTO used to register new users
+    UsernameUpdateDto:
+      required:
+      - newUsername
+      - password
+      type: object
+      properties:
+        newUsername:
+          type: string
+          description: New username
+          example: new_username
+        password:
+          type: string
+          description: Current password
+          example: user_password
+      description: DTO for updating a user's username
+    ValidateCodeDto:
+      required:
+      - code
+      type: object
+      properties:
+        code:
+          type: string
+          description: Code sent to the user
+          example: ABC123
+      description: DTO to validate a code sent to the user

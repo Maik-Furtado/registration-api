@@ -1,0 +1,60 @@
+@host=https://localhost:8443/cadastroapi/actrl/users
+@token= JWT-TOKEN
+
+###REGISTER-NEW-USER
+POST {{host}}/register
+Content-Type: application/json
+
+{
+  "username": "",
+  "email": "",
+  "password": ""
+}
+
+###VALIDATE-REGISTRER-CODE
+POST {{host}}/validate/register
+Authorization: Bearer {{token}}
+Content-Type: application/json
+
+{
+  "code": ""
+}
+
+###UPDADTE-USERNAME
+PUT {{host}}/update/username
+Authorization: Bearer {{token}}
+Content-Type: application/json
+
+{
+  "newUsername": "",
+  "password": ""
+}
+
+###UPDATE-EMAIL
+PUT {{host}}/update/email
+Authorization: Bearer {{token}}
+Content-Type: application/json
+
+{
+  "newEmail": "",
+  "password": ""
+
+}
+
+###VALIDATE-EMAIL-CODE
+POST {{host}}/validate/email
+Authorization: Bearer {{token}}
+Content-Type: application/json
+
+{
+  "code": ""
+}
+
+###DELETE-USER
+DELETE {{host}}/delete
+Authorization:  Bearer {{token}}
+Content-Type: application/json
+
+{
+  "password": ""
+}
