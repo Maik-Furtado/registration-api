@@ -150,10 +150,13 @@ VALUES
   (209, 'isabela lima', 'isabelalima@example.com', '123456', 'VALIDATED','USER'),
   (210, 'joao ramos', 'joaoramos@example.com', '123456', 'VALIDATED','USER');`
 
- 
-Thank you for visiting.  
-I hope this documentation was helpful to you!
+---
 
-— Maik Anton Furtado.
+Thank you for exploring this project.  
+Your time and interest are greatly appreciated. Should you have any questions or feedback, please don't hesitate to reach out.  
 
+✍️ *Maik Gabriel Anton Furtado*  
+| 📧 **Email:** maikgafurtado@gmail.com  
+| 🔗 **LinkedIn:** [linkedin.com/in/maikgafurtado](https://www.linkedin.com/in/maikgafurtado/)  
+| 💻 **GitHub:** [github.com/Maik-Furtado](https://github.com/Maik-Furtado)
 
